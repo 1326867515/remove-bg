@@ -1,5 +1,5 @@
 ---
-title: BRIA RMBG 1.4
+title: Background Remover
 emoji: 💻
 colorFrom: red
 colorTo: red
