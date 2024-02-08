@@ -94,6 +94,11 @@ gr.HTML('''
   </p>
 ''')
 
+title = ""
+description = r"""
+"""
+examples = [['./input.jpg'],]
+
 # output = ImageSlider(position=0.5,label='Image without background', type="pil", show_download_button=True)
 # demo = gr.Interface(fn=process,inputs="image", outputs=output, examples=examples, title=title, description=description)
 demo = gr.Interface(fn=process,inputs="image", outputs="image", examples=examples, title=title, description=description)
