@@ -94,24 +94,15 @@ gr.HTML('''
   </p>
 ''')
 
-title = "[AI For All](https://aifa.womener.in)"
-link = "https://aifa.womener.in"
-markdown_link = f"[{title}]({link})"
-print(markdown_link)
+title = "<a href='https://aifa.womener.in'>AI For All</a>"
+
 
 
 description = r"""
 """
 examples = [['./input.jpeg'],]
 
-demo = Interface(
-    fn=process,
-    inputs="image",
-    outputs="image",
-    examples=examples,
-    title="<center>AI For All</center>",
-    description=description,
-)
+
 
 # output = ImageSlider(position=0.5,label='Image without background', type="pil", show_download_button=True)
 # demo = gr.Interface(fn=process,inputs="image", outputs=output, examples=examples, title=title, description=description)
