@@ -94,11 +94,11 @@ gr.HTML('''
   </p>
 ''')
 
-title = "AI For All"
+title = "[AI For All](https://aifa.womener.in)"
 link = "https://aifa.womener.in"
 markdown_link = f"[{title}]({link})"
 print(markdown_link)
-[AI For All](https://aifa.womener.in)
+
 
 description = r"""
 """
