@@ -94,7 +94,7 @@ gr.HTML('''
   </p>
 ''')
 
-title = "<a href='https://aifa.womener.in'>AI For All</a>"
+title = "<center><a href='https://aifa.womener.in'>AI For All</a></center>"
 
 
 
