@@ -94,7 +94,7 @@ gr.HTML('''
   </p>
 ''')
 
-title = ""
+title = "[AI For All](https://aifa.womener.in)"
 description = r"""
 """
 examples = [['./input.jpeg'],]
