@@ -94,7 +94,7 @@ gr.HTML('''
   </p>
 ''')
 
-title = "<h2 align="center"><a href="https://womener.in">Womener AI</a></h2>"
+title = ""
 
 
 
