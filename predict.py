@@ -58,15 +58,23 @@ class Predictor(BasePredictor):
         input_image: Path = Input(description="Input Image"),
         contract_pixels: int = Input(description="Number of pixels to contract the edge", default=1, ge=1, le=5)
     ) -> List[Path]:
-        # 读取输入图像
-        image = cv2.imread(str(input_image), cv2.IMREAD_UNCHANGED)
+        # 使用PIL Image读取图像
+        pil_image = Image.open(str(input_image))
+        # 转换为numpy数组
+        image = np.array(pil_image)
+
+        # 如果是RGB图像,需要转换为RGBA
+        if image.shape[2] == 3:
+            # 添加alpha通道
+            alpha = np.full(image.shape[:2], 255, dtype=np.uint8)
+            image = np.dstack((image, alpha))
 
         # 处理图像得到第一张输出图片 (原始图像)
-        output_image1 = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGRA2RGBA))
+        output_image1 = Image.fromarray(image)
 
         # 处理得到第二张图片 (处理后的图像)
         processed_image = extract_precise_edge(str(input_image), "temp.png", contract_pixels=contract_pixels)
-        output_image2 = Image.fromarray(cv2.cvtColor(processed_image, cv2.COLOR_BGRA2RGBA))
+        output_image2 = Image.fromarray(processed_image)
 
         # 保存输出图像
         output_path1 = Path("output1.png")
@@ -77,14 +85,22 @@ class Predictor(BasePredictor):
 
         return [output_path1, output_path2]
 
+
 def extract_precise_edge(image_path, output_path, contract_pixels=1):
-    # 读取图像
-    img = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
+    # 使用PIL Image读取图像
+    pil_image = Image.open(image_path)
+    img = np.array(pil_image)
+    
+    # 确保图像有alpha通道
+    if img.shape[2] == 3:
+        alpha = np.full(img.shape[:2], 255, dtype=np.uint8)
+        img = np.dstack((img, alpha))
+    
     if img is None or img.shape[2] != 4:
         print("错误：无法读取图像或图像不包含alpha通道")
         return None
     
-    # 分离通道
+    # 后续处理保持不变
     bgr = img[:, :, :3]
     alpha = img[:, :, 3].copy()
     
