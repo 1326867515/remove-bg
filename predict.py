@@ -11,6 +11,7 @@ from briarmbg import BriaRMBG
 import PIL
 from PIL import Image
 from typing import Tuple
+import cv2
     
 def resize_image(image):
     image = image.convert('RGB')
@@ -55,12 +56,93 @@ class Predictor(BasePredictor):
     def predict(
         self,
         input_image: Path = Input(description="Input Image"),
-    ) -> Path:
+        contract_pixels: int = Input(description="Number of pixels to contract the edge", default=1, ge=1, le=5)
+    ) -> Tuple[Path, Path]:
         # 读取输入图像
-        image = Image.open(str(input_image))
-        # 处理图像
-        output_image = inference(np.array(image), self.net)
-        # 保存输出图像到临时文件
-        output_path = Path("output.png")
-        output_image.save(str(output_path))
-        return output_path
+        image = cv2.imread(str(input_image), cv2.IMREAD_UNCHANGED)
+
+        # 处理图像得到第一张输出图片 (原始图像)
+        output_image1 = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGRA2RGBA))
+
+        # 处理得到第二张图片 (处理后的图像)
+        processed_image = extract_precise_edge(str(input_image), "temp.png", contract_pixels=contract_pixels)
+        output_image2 = Image.fromarray(cv2.cvtColor(processed_image, cv2.COLOR_BGRA2RGBA))
+
+        # 保存输出图像
+        output_path1 = Path("output1.png")
+        output_path2 = Path("output2.png")
+
+        output_image1.save(str(output_path1))
+        output_image2.save(str(output_path2))
+
+        return output_path1, output_path2
+
+def extract_precise_edge(image_path, output_path, contract_pixels=1):
+    # 读取图像
+    img = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
+    if img is None or img.shape[2] != 4:
+        print("错误：无法读取图像或图像不包含alpha通道")
+        return None
+    
+    # 分离通道
+    bgr = img[:, :, :3]
+    alpha = img[:, :, 3].copy()
+    
+    # 预处理：降噪
+    alpha_denoised = cv2.fastNlMeansDenoising(alpha)
+    
+    # 获取复杂边缘
+    edges = get_complex_edge(alpha_denoised)
+    
+    # 创建核心结构元素
+    kernel = np.ones((3,3), np.uint8)
+    
+    # 边缘优化
+    dilated_edges = cv2.dilate(edges, kernel, iterations=1)
+    edge_mask = np.zeros_like(alpha)
+    edge_mask[dilated_edges > 0] = 255
+    
+    # 向内收缩
+    contracted_mask = cv2.erode(alpha, kernel, iterations=contract_pixels)
+    
+    # 应用mask
+    new_alpha = contracted_mask.copy()
+    
+    # 合并结果
+    cleaned_image = np.dstack((bgr, new_alpha))
+    
+    # 保存结果
+    cv2.imwrite(output_path, cleaned_image)
+    
+    return cleaned_image
+
+def get_complex_edge(alpha):
+    # Canny边缘检测
+    canny_edges = cv2.Canny(alpha, 100, 200)
+    
+    # Sobel边缘检测
+    sobelx = cv2.Sobel(alpha, cv2.CV_64F, 1, 0, ksize=3)
+    sobely = cv2.Sobel(alpha, cv2.CV_64F, 0, 1, ksize=3)
+    sobel_edges = np.sqrt(sobelx**2 + sobely**2)
+    sobel_edges = cv2.normalize(sobel_edges, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
+    
+    # Laplacian边缘检测
+    laplacian = cv2.Laplacian(alpha, cv2.CV_64F)
+    laplacian = np.uint8(np.absolute(laplacian))
+    
+    # 自适应阈值
+    adaptive_thresh = cv2.adaptiveThreshold(alpha, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                                          cv2.THRESH_BINARY, 11, 2)
+    
+    # 合并所有边缘检测结果
+    combined_edges = cv2.bitwise_or(canny_edges, sobel_edges)
+    combined_edges = cv2.bitwise_or(combined_edges, laplacian)
+    combined_edges = cv2.bitwise_or(combined_edges, adaptive_thresh)
+    
+    # 使用形态学操作优化边缘
+    kernel = np.ones((3,3), np.uint8)
+    combined_edges = cv2.morphologyEx(combined_edges, cv2.MORPH_CLOSE, kernel)
+    combined_edges = cv2.morphologyEx(combined_edges, cv2.MORPH_OPEN, kernel)
+    
+    return combined_edges
+
