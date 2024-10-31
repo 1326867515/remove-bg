@@ -1,5 +1,5 @@
 import os
-from cog import BasePredictor, Input, Path
+from cog import BasePredictor, Input, Path, Output
 
 import numpy as np
 import torch
@@ -10,7 +10,7 @@ import gradio as gr
 from briarmbg import BriaRMBG
 import PIL
 from PIL import Image
-from typing import Tuple
+from typing import Tuple,Dict
 import cv2
     
 def resize_image(image):
@@ -52,12 +52,13 @@ class Predictor(BasePredictor):
         else:
             self.net.load_state_dict(torch.load(model_path,map_location="cpu"))
         self.net.eval()
-        
+    
+    @Output({"original": Path, "processed": Path})
     def predict(
         self,
         input_image: Path = Input(description="Input Image"),
         contract_pixels: int = Input(description="Number of pixels to contract the edge", default=1, ge=1, le=5)
-    ) -> Tuple[Path, Path]:
+    ) -> Dict[str, Path]:
         # 读取输入图像
         image = cv2.imread(str(input_image), cv2.IMREAD_UNCHANGED)
 
@@ -75,7 +76,10 @@ class Predictor(BasePredictor):
         output_image1.save(str(output_path1))
         output_image2.save(str(output_path2))
 
-        return output_path1, output_path2
+        return {
+            "original": output_path1,
+            "processed": output_path2
+        }
 
 def extract_precise_edge(image_path, output_path, contract_pixels=1):
     # 读取图像
