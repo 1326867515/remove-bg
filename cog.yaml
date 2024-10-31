@@ -12,7 +12,3 @@ build:
     - "huggingface_hub==0.15.1"
 
 predict: "predict.py:Predictor"
-
-# 添加模型文件
-files:
-  - model.pth
