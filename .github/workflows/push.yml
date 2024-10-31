@@ -1,29 +1,30 @@
 name: Push to Replicate
- 
+
 on:
   push:
-  branches:
-    - main
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       model_name:
-        description: '1326867515/remove-bg-edge'
+        description: 'Model name on Replicate'
+        default: '1326867515/remove-bg-edge'
         required: true
- 
+
 jobs:
   push_to_replicate:
     name: Push to Replicate
     runs-on: ubuntu-latest
     steps:
-      - name: Free disk pace
+      - name: Free disk space
         uses: jlumbroso/free-disk-space@v1.3.1
         with:
           tool-cache: false
           docker-images: false
- 
+
       - name: Checkout
         uses: actions/checkout@v4
- 
+
       - name: Setup Cog
         uses: replicate/setup-cog@v2
         with:
