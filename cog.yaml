@@ -6,9 +6,13 @@ build:
     - "libglib2.0-0"
   python_packages:
     - "torch==2.0.1"
-    - "torchvision==0.15.2"
+    - "torchvision==0.15.2" 
     - "numpy==1.24.3"
     - "pillow==9.5.0"
     - "huggingface_hub==0.15.1"
+    - "gradio==3.35.2"
+    - "gradio_imageslider==0.0.8"
+    - "gitpython==3.1.31"
+    - "typing==3.7.4.3"
 
 predict: "predict.py:Predictor"
