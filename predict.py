@@ -51,9 +51,16 @@ class Predictor(BasePredictor):
         else:
             self.net.load_state_dict(torch.load(model_path,map_location="cpu"))
         self.net.eval()
+        
     def predict(
         self,
         input_image: Path = Input(description="Input Image"),
     ) -> Path:
-        output_image = inference(input_image, self.net)
-        return Path(output_image)
+        # 读取输入图像
+        image = Image.open(str(input_image))
+        # 处理图像
+        output_image = inference(np.array(image), self.net)
+        # 保存输出图像到临时文件
+        output_path = Path("output.png")
+        output_image.save(str(output_path))
+        return output_path
