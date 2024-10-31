@@ -62,28 +62,32 @@ class Predictor(BasePredictor):
         pil_image = Image.open(str(input_image))
         # 转换为numpy数组
         image = np.array(pil_image)
-
-        # 如果是RGB图像,需要转换为RGBA
-        if image.shape[2] == 3:
-            # 添加alpha通道
-            alpha = np.full(image.shape[:2], 255, dtype=np.uint8)
-            image = np.dstack((image, alpha))
-
-        # 处理图像得到第一张输出图片 (原始图像)
-        output_image1 = Image.fromarray(image)
-
-        # 处理得到第二张图片 (处理后的图像)
-        processed_image = extract_precise_edge(str(input_image), "temp.png", contract_pixels=contract_pixels)
+    
+        # 调用inference函数处理图像得到第一张输出图片
+        output_image1 = inference(image, self.net)
+    
+        # 将output_image1保存为临时文件
+        temp_path = "temp_inference.png"
+        output_image1.save(temp_path)
+    
+        # 处理inference的输出得到第二张图片
+        processed_image = extract_precise_edge(temp_path, "temp.png", contract_pixels=contract_pixels)
         output_image2 = Image.fromarray(processed_image)
-
+    
         # 保存输出图像
         output_path1 = Path("output1.png")
         output_path2 = Path("output2.png")
-
+    
         output_image1.save(str(output_path1))
         output_image2.save(str(output_path2))
-
+    
+        # 删除临时文件
+        import os
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+    
         return [output_path1, output_path2]
+
 
 
 def extract_precise_edge(image_path, output_path, contract_pixels=1):
